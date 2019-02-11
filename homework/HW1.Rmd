@@ -1,0 +1,115 @@
+---
+title: "Hyndman Forecasting Chapter 2"
+author: "simplymathematics"
+date: "February 5, 2019"
+output: html_document
+---
+
+## Problem 1
+
+```{r}
+library(fpp2)
+library(curl)
+library(readxl)
+```
+__gold__ is the daily price of gold over several years in the 80s. The outlier is February 9, 1987 or the 770th entry of the dataset
+
+```{r}
+x <- gold
+autoplot(x)
+frequency(x)
+which.max(x)
+```
+__woolyrnq__ is the quarterly production of woolen yarn in Australia.
+```{r}
+??woolyrnq
+x <- woolyrnq
+autoplot(x)
+frequency(x)
+```
+
+__gas__ is the Australian monthly gas production from 1965-1995.
+```{r}
+?gas
+x <- gas
+autoplot(x)
+frequency(x)
+```
+
+# Problem 2
+
+```{r}
+curl_download("http://otexts.com/fpp2/extrafiles/tute1.csv", "tute1.csv")
+tute1 <- read.csv("tute1.csv", header=TRUE)
+ts1 <- ts(tute1[,-1], start=1981, frequency = 4)
+autoplot(ts1, facets=TRUE)
+autoplot(ts1)
+```
+As we can see from this graph, the ```facets``` flag is used to tell the autoplot() function that the variables should be graphed separately.
+
+# Problem 3
+
+```{r}
+curl_download("https://otexts.com/fpp2/extrafiles/retail.xlsx", "retail.xlsx")
+retail <- read_excel("retail.xlsx", skip = 1)
+ts2 <- ts(retail[,"A3349872X"], frequency = 12, start = c(1982,4))
+```
+```{r}
+autoplot(ts2)
+ggseasonplot(ts2)
+ggsubseriesplot(ts2)
+gglagplot(ts2)
+ggAcf(ts2)
+```
+The Seasonal and subseries plots clearly show an increased usage of gas in the Australian summer (November and December). 
+
+# Problem 6
+The lag plot, particularly lags 1 and 2 reflect strong seasonality in the data. In addition, there appears to be a long, term cyclical nature to the data, as show by the autocorrelation chart. The scatterplot and subseason plots agree.
+```{r}
+tsx <- hsales
+autoplot(tsx)
+ggseasonplot(tsx)
+ggsubseriesplot(tsx)
+gglagplot(tsx)
+ggAcf(tsx)
+```
+The number of accidental deaths in the US is also cyclical, following the properties described above. However, the number of deaths peaks in the Summer, perhaps correlated with an increased number of drivers and a higher number of construction related jobs.
+
+```{r}
+?usdeaths
+tsx <- usdeaths
+autoplot(tsx)
+ggseasonplot(tsx)
+ggsubseriesplot(tsx)
+gglagplot(tsx)
+ggAcf(tsx)
+```
+The ```bricksq``` data show the Australian quarterly clay brick production, which shows cyclic nature of the business, with production peaking in Q2 and Q3. The 1975 and 1983 recessions are obvious in the data.
+```{r}
+?bricksq
+tsx <- bricksq
+autoplot(tsx)
+ggseasonplot(tsx, polar = TRUE)
+ggsubseriesplot(tsx)
+gglagplot(tsx)
+ggAcf(tsx)
+```
+Sunspots appear to be cyclical, which si confirmed by the postive lags (numbers 1 and 9) and the autocorrelation plot. The scatter plot appears to show a cyclical growth and decline in the are of sun spots, but the period does not appear to be constant.
+```{r}
+?sunspotarea
+tsx <- sunspotarea
+autoplot(tsx)
+gglagplot(tsx)
+ggAcf(tsx)
+```
+US gasoline production tends to rise in the summer, but is also subject to wider economic trends. 
+```{r}
+?gasoline
+gasoline <- ts(gasoline,frequency = 52)
+tsx <- gasoline
+autoplot(tsx)
+ggseasonplot(tsx)
+ggsubseriesplot(tsx)
+gglagplot(tsx)
+ggAcf(tsx)
+```

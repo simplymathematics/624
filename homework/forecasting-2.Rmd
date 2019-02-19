@@ -1,0 +1,73 @@
+---
+title: "Forecasting 2"
+output: html_document
+---
+## Problem 1
+```{r}
+library(fpp2, quietly= TRUE)
+?usnetelec
+x <- usnetelec
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+```
+
+```{r}
+x <- usgdp
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+```
+
+```{r}
+x <- mcopper
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+```
+
+```{r}
+x <- enplanements
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+```
+## Problem 2
+```{r}
+?cangas
+x <- cangas
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+```
+Box Cox does not make our model simpler
+
+## Problem 3
+```{r}
+curl :: curl_download("https://otexts.com/fpp2/extrafiles/retail.xlsx", "retail.xlsx")
+retail <- read_excel("retail.xlsx", skip = 1)
+ts <- ts(retail[,"A3349872X"], frequency = 12, start = c(1982,4))
+x <- ts
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+
+fc_retail <- rwf(ts, drift = TRUE, lambda= lambda, h = 50, level = 80)
+
+adjusted <- rwf(ts, drift = TRUE, lambda= lambda, h = 50, level = 80, biasadj = TRUE)
+
+autoplot(myts) +
+  autolayer(fc_retail, series = "Drift method with Box-Cox Transformation") +
+  autolayer(fc_retail_biasadj$mean, series = "Bias Adjusted Method")
+```
+
+
+## Problem 4
+
+```{r}
+myts.train <- window(ts, end=c(2010,12))
+myts.test <- window(ts, start=2011)
+autoplot(myts) +
+  autolayer(myts.train, series="Training") +
+  autolayer(myts.test, series="Test")
+fc <- snaive(myts.train)
+accuracy(fc,myts.test)
+checkresiduals(fc)
+
+```
+
+The residuals appear to be uncorrelated and normally distributed.

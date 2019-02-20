@@ -71,3 +71,16 @@ checkresiduals(fc)
 ```
 
 The residuals appear to be uncorrelated and normally distributed, but the lag does not.
+
+```{r}
+ts.train <- window(ts, end=c(2000,12))
+ts.test <- window(ts, start=2001)
+autoplot(ts) +
+  autolayer(ts.train, series="Training") +
+  autolayer(ts.test, series="Test")
+fc <- snaive(ts.train)
+accuracy(fc,ts.test)
+checkresiduals(fc)
+
+```
+Decreasing the sample size by 33% did not significantly change the results.

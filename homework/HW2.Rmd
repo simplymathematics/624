@@ -1,0 +1,73 @@
+---
+title: "Forecasting 2"
+output: html_document
+---
+## Problem 1
+```{r}
+library(fpp2, quietly= TRUE)
+?usnetelec
+x <- usnetelec
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+```
+
+```{r}
+x <- usgdp
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+```
+
+```{r}
+x <- mcopper
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+```
+
+```{r}
+x <- enplanements
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+```
+## Problem 2
+```{r}
+?cangas
+x <- cangas
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+```
+Box Cox does not appear to make our model simpler. Therefore, it is inappropriate.
+
+## Problem 3
+```{r}
+curl :: curl_download("https://otexts.com/fpp2/extrafiles/retail.xlsx", "retail.xlsx")
+retail <- readxl :: read_excel("retail.xlsx", skip = 1)
+ts <- ts(retail[,"A3349872X"], frequency = 12, start = c(1982,4))
+x <- ts
+lambda <- BoxCox.lambda(x)
+autoplot(BoxCox(x, lambda))
+
+retail <- rwf(ts, drift = TRUE, lambda= lambda, h = 50, level = 80)
+
+adjusted <- rwf(ts, drift = TRUE, lambda= lambda, h = 50, level = 80, biasadj = TRUE)
+
+autoplot(ts) +
+  autolayer(retail, series = "Drift method with Box-Cox Transformation") +
+  autolayer(adjusted$mean, series = "Bias Adjusted Method")
+```
+
+
+## Problem 8
+
+```{r}
+ts.train <- window(ts, end=c(2010,12))
+ts.test <- window(ts, start=2011)
+autoplot(ts) +
+  autolayer(ts.train, series="Training") +
+  autolayer(ts.test, series="Test")
+fc <- snaive(ts.train)
+accuracy(fc,ts.test)
+checkresiduals(fc)
+
+```
+
+The residuals appear to be uncorrelated and normally distributed, but the lag does not.

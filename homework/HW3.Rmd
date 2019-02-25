@@ -1,0 +1,83 @@
+---
+title: "Forecasting 3"
+author: "simplymathematics"
+date: "February 24, 2019"
+output: html_document
+---
+
+```{r}
+library(fpp2)
+library(seasonal)
+```
+
+
+## Problem 6.2
+### a
+```{r, echo = FALSE}
+?plastics
+autoplot(plastics)
+```
+Plastic sales tend to peak in the middle of the month.
+### b
+
+```{r, echo = FALSE}
+plastics_decomposed <- decompose(plastics, type = 'multiplicative')
+autoplot(plastics_decomposed)
+```
+### c
+The decomposition shows the same monthly trend as well as a general upward tick in production (excluding the last month). 
+### d
+```{r, echo = FALSE}
+autoplot(plastics, series = 'Plastics Production') + 
+  ggtitle("Sales of plastic (thousands)") +
+  autolayer(trendcycle(plastics_decomposed), series = 'Trend') + 
+  autolayer(seasadj(plastics_decomposed), series = 'Seasonally Adjusted') + 
+  xlab("Year") +
+  ylab("Monthly Sales")
+
+```
+### e
+```{r, echo = FALSE}
+new <- plastics
+new[1] <- 2000
+d.new <- decompose(new, type = 'multiplicative')
+
+autoplot(new, series = 'Plastics Production') + 
+  ggtitle("Sales of plastic (thousands)") +
+  autolayer(trendcycle(d.new), series = 'Trend') + 
+  autolayer(seasadj(d.new), series = 'Seasonally Adjusted') + 
+  xlab("Year") +
+  ylab("Monthly Sales")
+```
+The outlier effects the seasonally adjusted value greatly, but does not greatly effect the trend line.
+### f
+
+```{r, echo = FALSE}
+new <- plastics
+new[10] <- 2000
+d.new <- decompose(new, type = 'multiplicative')
+
+autoplot(new, sies = 'Plastics Production') + 
+  ggtitle("Sales of plastic (thousands)") +
+  autolayer(trendcycle(d.new), series = 'Trend') + 
+  autolayer(seasadj(d.new), series = 'Seasonally Adjusted') + 
+  xlab("Year") +
+  ylab("Monthly Sales")
+```
+The later in the data the outlier is, the less it effects the trend line.
+## Problem 6.3
+### Load Data
+```{r, echo=FALSE}
+curl :: curl_download("https://otexts.com/fpp2/extrafiles/retail.xlsx", "retail.xlsx")
+retail <- readxl :: read_excel("retail.xlsx", skip = 1)
+ts <- ts(retail[,"A3349872X"], frequency = 12, start = c(1982,4))
+autoplot(ts)
+```
+
+### Decompose the series using X11
+```{r, echo = FALSE}
+ts.x11 <- seas(ts, x11 = "")
+autoplot(ts.x11)
+```
+
+As expected, the biggest outlier to air traffic was 2001. Additionally, there has been recent volatility perhaps due to fluctuating oil prices and other travel-related concerns.

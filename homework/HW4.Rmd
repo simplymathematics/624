@@ -108,5 +108,7 @@ corrplot:: corrplot(results)
 ```
 We see that plant growth, leaves, leaf.mard, and leaf.halo are are all strongly colinear. Additionally, canker.lesions, fruiting bodies, and fruit spots are all similarly colinear with mold, seed discoloration, and shriveling. These data points could likely be combined into a singular 'health' dummy variable.
 
+Additionally, we can impute data using the K-nearest neighbor model for missing values, which finds the likely value of a data point by looking at the same data point when compared to other vectors. However, a simpler approach is more appropriate for some data points. We can use a variable with high correlation to the data vector in question, compute a linear regression model, and fill in the missing data. The accuracy of that depends entirely on the correlation between two data points. If a data point has no correlation with any of the other vectors (including the target vector), then it's likely that it can be discarded altogether.
+
 
 

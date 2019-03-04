@@ -1,0 +1,94 @@
+---
+title: "forecasting 4"
+author: "simplymathematics"
+date: "March 3, 2019"
+output: html_document
+---
+
+## Dependencies
+
+```{r}
+library(fpp2)
+library(mlbench)
+library(plyr)
+
+```
+
+## Problem 3.1
+
+### a
+We can use a correlation plot to examine the relationship between the variables and the predicted value.
+```{r}
+pairs(Glass)
+```
+We can see that there is a strong linear relationship between Ri and Ca. We also see that the K content is independent of the the other minerals. Likewise, iron is found at all levels with many other minerals in many types of glass. Otherwise, the mineral content with respect to the listed minerals does not appear to be colinear.
+
+### b
+
+```{r}
+data(Glass)
+boxplot(Glass$RI)
+boxplot(Glass$Na)
+boxplot(Glass$Mg)
+boxplot(Glass$Al)
+boxplot(Glass$Si)
+boxplot(Glass$K)
+boxplot(Glass$Ca)
+boxplot(Glass$Ba)
+boxplot(Glass$Fe)
+```
+
+We can see from the boxplots, that every variable except ```Mg``` has outliers. We can look at density plots to see the distributions. In these plots, we can see that most of the data is skewed right with most data points fairly low, but with some more extreme mineral contents listed.
+
+```{r}
+plot(density(Glass$RI))
+plot(density(Glass$Na))
+plot(density(Glass$Mg))
+plot(density(Glass$Al))
+plot(density(Glass$Si))
+plot(density(Glass$K))
+plot(density(Glass$Ca))
+plot(density(Glass$Ba))
+plot(density(Glass$Fe))
+```
+
+### c
+Most of these data vectors are not normal distributions and our model would benefit if there data was transformed using a Box-Cox transformation. The data that has 2 peaks could benefit from a logistic function that bifurcated the data set into one peak or the other. 
+
+## Problem 3.2
+
+```{r}
+data(Soybean)
+Soybean
+barplot(table(Soybean$date))
+barplot(table(Sbarplot(table(Soybean$date))oybean$plant.stand))
+barplot(table(Soybean$precip))
+barplot(table(Soybean$temp))
+barplot(table(Soybean$hail))
+barplot(table(Soybean$crop.hist))
+barplot(table(Soybean$area.dam))
+barplot(table(Soybean$sever))
+barplot(table(Soybean$seed))
+barplot(table(Soybean$seed.tmt))
+barplot(table(Soybean$seed.discolor))
+barplot(table(Soybean$seed.size))
+barplot(table(Soybean$germ))
+barplot(table(Soybean$plant.growth))
+barplot(table(Soybean$leaves))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+barplot(table(Soybean$date))
+```
+
+

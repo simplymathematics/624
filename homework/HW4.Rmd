@@ -19,6 +19,7 @@ library(plyr)
 ### a
 We can use a correlation plot to examine the relationship between the variables and the predicted value.
 ```{r}
+data(Glass)
 pairs(Glass)
 ```
 We can see that there is a strong linear relationship between Ri and Ca. We also see that the K content is independent of the the other minerals. Likewise, iron is found at all levels with many other minerals in many types of glass. Otherwise, the mineral content with respect to the listed minerals does not appear to be colinear.
@@ -27,68 +28,85 @@ We can see that there is a strong linear relationship between Ri and Ca. We also
 
 ```{r}
 data(Glass)
-boxplot(Glass$RI)
-boxplot(Glass$Na)
-boxplot(Glass$Mg)
-boxplot(Glass$Al)
-boxplot(Glass$Si)
-boxplot(Glass$K)
-boxplot(Glass$Ca)
-boxplot(Glass$Ba)
-boxplot(Glass$Fe)
+sapply(Glass, function(x){
+  boxplot(as.numeric(x))
+})
 ```
 
 We can see from the boxplots, that every variable except ```Mg``` has outliers. We can look at density plots to see the distributions. In these plots, we can see that most of the data is skewed right with most data points fairly low, but with some more extreme mineral contents listed.
 
 ```{r}
-plot(density(Glass$RI))
-plot(density(Glass$Na))
-plot(density(Glass$Mg))
-plot(density(Glass$Al))
-plot(density(Glass$Si))
-plot(density(Glass$K))
-plot(density(Glass$Ca))
-plot(density(Glass$Ba))
-plot(density(Glass$Fe))
+sapply(Glass, function(x){
+  plot(density(as.numeric(x)))
+})
+
+
 ```
 
 ### c
-Most of these data vectors are not normal distributions and our model would benefit if there data was transformed using a Box-Cox transformation. The data that has 2 peaks could benefit from a logistic function that bifurcated the data set into one peak or the other. 
+Most of these data vectors are not normal distributions and our model would benefit if there data was transformed using a Box-Cox transformation. The data that has 2 peaks could benefit from a logistic function that bifurcated the data set into one peak or the other. As we can see below, taking the square- or cube-root of the iron vector gives us nicer, bi-modal data. The Box Cox transformation does something even more dramatic..
+```{r}
+
+sq <- Glass$Fe^(1/2)
+cub <- Glass$Fe^(1/3)
+lambda <- BoxCox.lambda(Glass$Fe)
+boxcox <- BoxCox(Glass$Fe, lambda)
+
+
+plot(density(Glass$Fe))
+plot(density(sq))
+plot(density(cub))
+plot(density(boxcox))
+```
+
 
 ## Problem 3.2
+### a
+```{r}
+data("Soybean")
+sapply(Soybean, function(x){
+  barplot(table(x))
+})
+
+```
+Yes, features 19, 26, 27, 28, 31, 32, 33, 34, and 35 are degenrate, meaning, there is only 1 useful category label for each of these.
+### b
+We can see from the figures below that several of the data vectors have hundreds of missing data points while a couple have very few. In particular, we see that seed.tmt, loding, germ, hail, and sever have the most missing data because they appear to be the hardest to collect.
 
 ```{r}
-data(Soybean)
-Soybean
-barplot(table(Soybean$date))
-barplot(table(Sbarplot(table(Soybean$date))oybean$plant.stand))
-barplot(table(Soybean$precip))
-barplot(table(Soybean$temp))
-barplot(table(Soybean$hail))
-barplot(table(Soybean$crop.hist))
-barplot(table(Soybean$area.dam))
-barplot(table(Soybean$sever))
-barplot(table(Soybean$seed))
-barplot(table(Soybean$seed.tmt))
-barplot(table(Soybean$seed.discolor))
-barplot(table(Soybean$seed.size))
-barplot(table(Soybean$germ))
-barplot(table(Soybean$plant.growth))
-barplot(table(Soybean$leaves))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
-barplot(table(Soybean$date))
+missing <- sapply(Soybean, function(x){
+  sum(is.na(x))
+})
+missing
+missing2 <- as.data.frame(missing)
+missing2 <- sort(missing2$missing, decreasing = TRUE)
+missing2
+
+
+table(Soybean$Class, complete.cases(Soybean))
 ```
+
+### c
+
+We can see below that nearly 10% of our rows are incomplete. To make the data more useful for modelling, we can use imputation.
+```{r}
+ordered <- unlist(lapply(Soybean, is.ordered))
+ordered <- names(ordered)[ordered]
+
+list <- as.character(unique(Soybean$Class[complete.cases(Soybean)]))
+complete <- subset(Soybean, Class %in% list)
+complete
+dim(complete)
+dim(Soybean)
+```
+We can use a correlation plot to see which variable are colinear and can be combined or eliminated.
+```{r}
+data <- sapply(Soybean, as.numeric)
+data <- as.data.frame(data)
+results <- round(cor(data, use = 'complete.obs'),2)
+corrplot:: corrplot(results)
+```
+We see that plant growth, leaves, leaf.mard, and leaf.halo are are all strongly colinear. Additionally, canker.lesions, fruiting bodies, and fruit spots are all similarly colinear with mold, seed discoloration, and shriveling. These data points could likely be combined into a singular 'health' dummy variable.
+
 
 

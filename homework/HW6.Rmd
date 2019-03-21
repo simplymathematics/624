@@ -1,0 +1,163 @@
+---
+title: "HW 6"
+author: "simplymathematics"
+date: "March 21, 2019"
+output: html_document
+---
+
+# Hyndman Chapter 8
+## Problem 8.1
+### a
+All three of the plots indicate white noise because none of the data exceeds the critical values. The differences between them are because we'd expect less variance as our number of samples goes up.
+
+### b
+
+The p = .05 critical value is defined as 
+$$
+\pm \frac{1.96}{\sqrt{T-d}}
+$$
+where T is the sample size and d is the lag degree. Consequently, we see that as sample size increases, we'd expect our critical value to decrease. This explains the difference between the three plots above.
+
+## Problem 8.2
+
+```{r, echo =FALSE}
+library(fpp2)
+x <- ibmclose
+par(mfrow = c(2,2))
+plot(x, main = 'x')
+qqnorm(x)
+acf(x)
+pacf(x)
+auto.arima(x)
+```
+
+Both the ACF and PACF plots show significant autocorrelation. 
+
+## Problem 8.3
+
+### a
+Here a Box-Cox transformatin is inappropriate because variance appears to be constant.
+```{r, echo = FALSE}
+x <- usnetelec
+par(mfrow = c(2,2))
+plot(x, main = 'x')
+qqnorm(transformed, main = "Transformed Data")
+qqline(transformed)
+acf(x)
+pacf(x)
+auto.arima(x)
+```
+
+The plots show that except for an intiail spike for the ACF, none of the values exceed the critical value. Additionally, increasing the differencing order to 2 increases the errors at various lags.
+```{r, echo = FALSE}
+x <- usnetelec
+par(mfrow = c(2,2))
+plot(x, main = 'x')
+transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
+qqnorm(transformed, main = "Transformed Data")
+qqline(transformed)
+acf(x)
+pacf(x)
+auto.arima(x)
+```
+### b
+```{r}
+x <- usgdp
+par(mfrow = c(2,2))
+plot(x, main = 'x')
+transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
+qqnorm(transformed, main = "Transformed Data")
+qqline(transformed)
+acf(x)
+pacf(x)
+auto.arima(x)
+```
+### c
+```{r}
+?usgdp
+x <- usgdp
+par(mfrow = c(2,2))
+plot(x, main = 'x')
+transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
+qqnorm(transformed, main = "Transformed Data")
+qqline(transformed)
+acf(x)
+pacf(x)
+auto.arima(x)
+```
+### d
+```{r}
+?auto.arima()
+x <- enplanements
+par(mfrow = c(2,2))
+plot(x, main = 'x')
+transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
+
+qqnorm(transformed, main = "Transformed Data")
+qqline(transformed)
+acf(x)
+pacf(x)
+auto.arima(x)
+```
+### e
+```{r}
+??visitors
+x <-visitors
+par(mfrow = c(2,2))
+plot(x, main = 'x')
+transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
+
+qqnorm(transformed, main = "Transformed Data")
+qqline(transformed)
+acf(x)
+pacf(x)
+auto.arima(x)
+```
+
+## Problem 8.5
+```{r}
+curl::curl_download("https://otexts.com/fpp2/extrafiles/retail.xlsx", "retail.xlsx")
+retail <- readxl::read_excel("retail.xlsx", skip = 1)
+ts <- ts(retail[,"A3349872X"], frequency = 12, start = c(1982,4))
+autoplot(ts)
+x <- ts
+par(mfrow = c(2,2))
+plot(x, main = 'x')
+transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
+
+qqnorm(transformed, main = "Transformed Data")
+qqline(transformed)
+acf(x)
+pacf(x)
+auto.arima(x)
+```
+## Problem 8.6
+```{r}
+y <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 2:100)
+  y[i] <- 0.6*y[i-1] + e[i]
+
+```
+### b
+```{r}
+plot(y)
+```
+### c
+### d
+### e
+### f
+### g
+
+## Problem 8.7
+
+```{r}
+x <- wmurders
+plot(x)
+transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
+par(mfrow = c(1,2))
+qqnorm(x, main = "Data")
+qqline(x)
+qqnorm(transformed, main = "Transformed Data")
+qqline(transformed)
+```

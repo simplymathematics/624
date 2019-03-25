@@ -3,3 +3,205 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+# Project 1
+
+## Part A
+
+In part A, I want you to forecast how much cash is taken out of 4 different ATM machines for May 2010.  The data is given in a single file.  The variable ‘Cash’ is provided in hundreds of dollars, other than that it is straight forward.   I am being somewhat ambiguous on purpose to make this have a little more business feeling.  Explain and demonstrate your process, techniques used and not used, and your actual forecast.  I am giving you data via an excel file, please provide your written report on your findings, visuals, discussion and your R code via an RPubs link along with the actual.rmd file  Also please submit the forecast which you will put in an Excel readable file.
+
+
+```{r}
+library(forecast)
+atm.data <- readxl::read_xlsx("data/ATM624Data.xlsx")
+atm1 <- ts(subset(atm.data$Cash,subset = atm.data$ATM == 'ATM1'), frequency = 7)
+atm2 <- ts(subset(atm.data$Cash, subset = atm.data$ATM== 'ATM2'), frequency = 7)
+atm3 <- ts(subset(atm.data$Cash, subset = atm.data$ATM== 'ATM3'), frequency = 7)
+atm4 <- ts(subset(atm.data$Cash, subset = atm.data$ATM== 'ATM4'), frequency = 7)
+
+atms <- (atm1+ atm2+ atm4)
+autoplot(atms)
+
+```
+Remove outlier
+```{r}
+# Assumer outlier is wrong
+atm4[285] <- mean(atms)
+atms <- (atm1+ atm2+ atm3+ atm4)
+autoplot(atms)
+```
+
+Impute missing data by averaging the data on either side.
+
+```{r}
+
+#Imputation
+for (index in which(is.na(atm1)==TRUE)){
+  atm1[index] = atm1[index+1]/2 + atm1[index-1]/2
+}
+for (index in which(is.na(atm2)==TRUE)){
+  atm2[index] = atm2[index+1]/2 + atm2[index-1]/2
+}
+for (index in which(is.na(atm3)==TRUE)){
+  atm3[index] = atm3[index+1]/2 + atm3[index-1]/2
+}
+for (index in which(is.na(atm4)==TRUE)){
+  atm4[index] = atm4[index+1]/2 + atm4[index-1]/2
+}
+```
+
+# Check normality
+```{r}
+# Before
+par(mfrow = c(2,2))
+qqnorm(atm1)
+qqline(atm1)
+qqnorm(atm2)
+qqline(atm2)
+qqnorm(atm4)
+qqline(atm4)
+
+
+atm1 <- BoxCox(atm1, lambda = BoxCox.lambda(atm1))
+atm2 <- BoxCox(atm2, lambda= BoxCox.lambda(atm2))
+
+par(mfrow = c(1,2))
+qqnorm(atm1)
+qqline(atm1)
+qqnorm(atm2)
+qqline(atm2)
+
+```
+
+```{r}
+atms <- cbind(atm1, atm2, atm3, atm4)
+autoplot(atms)
+```
+
+```{r}
+par(mfrow = c(2,2))
+acf(atm1)
+acf(atm2)
+acf(atm3)
+acf(atm4)
+```
+
+
+
+```{r}
+gglagplot(atms, lags = 30)
+gglagplot(atm1, lags = 30)
+gglagplot(atm2, lags = 30)
+gglagplot(atm3, lags = 30)
+gglagplot(atm4, lags = 30)
+```
+Simple Holt
+```{r}
+fcast1 <- holt(atm1, h = 30)
+fcast2 <- holt(atm2, h = 30)
+fcast3 <- holt(atm3, h = 30)
+fcast4 <- holt(atm4, h = 30)
+autoplot(atm1) + 
+  autolayer(fcast1, series = "ATM 1 Projection", PI = FALSE)
+ # autolayer(fcast2, series = "ATM 2 Projection", PI = FALSE) + 
+  #autolayer(fcast4, series = "ATM 4 Projection", PI = FALSE) 
+```
+Holt- Winters
+
+```{r}
+fc4 <- hw(atm4, damped=FALSE )
+
+fc3 <- hw(atm3, damped = FALSE)
+
+fc2 <- hw(atm2, damped=FALSE)
+
+
+fc1 <- hw(atm2, damped=FALSE)
+
+par(mfrow = c(3,1))
+
+autoplot(fc1)
+autoplot(fc2)
+autoplot(fc3)
+autoplot(fc4)
+```
+```{r}
+p1 <- predict(fc1, 30, prediction.interval=TRUE)
+p2 <- predict(fc2, 30, prediction.interval=TRUE)
+p3 <- predict(fc3, 30, prediction.interval=TRUE)
+p4 <- predict(fc4, 30, prediction.interval=TRUE)
+par(mfrow =c(2,2))
+
+plot(p1)
+plot(p2)
+plot(p3)
+plot(p4)
+```
+
+## Part B
+
+Part B consists of a simple dataset of residential power usage for January 1998 until December 2013.  Your assignment is to model these data and a monthly forecast for 2014.  The data is given in a single file.  The variable ‘KWH’ is power consumption in Kilowatt hours, the rest is straight forward.    Add this to your existing files above. 
+
+```{r}
+df <- readxl::read_xlsx("data/ResidentialCustomerForecastLoad-624.xlsx")
+df$KWH <- as.numeric(df$KWH)
+ts <- ts(df$KWH, start = c(1998,1), end = c(2013,12), frequency = 12)
+autoplot(ts)
+```
+
+```{r}
+
+for (index in which(is.na(ts)==TRUE)){
+  ts[index] = (ts[index+1] + ts[index-1])/2
+}
+```
+
+```{r}
+model1 <- hw(ts)
+predictions <- predict(model1, 12, prediction.interval=TRUE)
+plot(predictions)
+```
+```{r}
+foo <- as.data.frame(ts)
+bar <- as.data.frame(predictions)
+bar$`Lo 80` <- NULL
+bar$`Hi 80` <- NULL
+bar$`Lo 95` <- NULL
+bar$`Hi 95` <- NULL
+
+length1 = dim(foo)
+tmp <- length(foo)
+row.names(bar) = NULL
+colnames(bar) = 'x'
+
+
+i <- dim(foo)[1]
+
+bar <- c(bar$x)
+foo <- c(foo$x)
+
+for(index in 1:length(bar)){
+  foo[index + i] <- bar[index]
+}
+
+
+```
+
+
+```{r}
+ts.new <- ts(foo, start = c(1998,1), frequency = 12)
+partB <- ts.new
+
+ts2csv <- function(x) {
+  fname <- paste0("predictions/",deparse(substitute(x)), ".csv")h
+  readr::write_csv(tsibble::as_tsibble(x, gather = FALSE), fname)
+}
+
+ts2csv(partB)
+
+
+```
+
+
+## Part C
+
+Part C consists of two data sets.  These are simple 2 columns sets, however they have different time stamps.  Your optional assignment is to time-base sequence the data and aggregate based on hour (example of what this looks like, follows).  Note for multiple recordings within an hour, take the mean.  Then to determine if the data is stationary and can it be forecast.  If so, provide a week forward forecast and present results via Rpubs and .rmd and the forecast in an Excel readable file.   

@@ -1,0 +1,18 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+## Chapter 7 Hyndman
+
+## 7.1
+
+## 7.5
+
+## 7.6
+
+## 7.8
+
+## 7.9
+
+

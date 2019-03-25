@@ -31,7 +31,7 @@ pacf(x)
 auto.arima(x)
 ```
 
-Both the ACF and PACF plots show significant autocorrelation. 
+Both the ACF and PACF plots show significant autocorrelation as there are many lags spikes beyond the critical values. Additionally, the data does not appear to be normally distributed.
 
 ## Problem 8.3
 
@@ -41,53 +41,56 @@ Here a Box-Cox transformatin is inappropriate because variance appears to be con
 x <- usnetelec
 par(mfrow = c(2,2))
 plot(x, main = 'x')
+transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
 qqnorm(transformed, main = "Transformed Data")
 qqline(transformed)
-acf(x)
-pacf(x)
+acf(transformed, main = "Box Cox Data")
+data.diff <- diff(transformed, 12)
+data.diff <- diff(transformed, 1)
+acf(data.diff, main = "Lag 1")
 auto.arima(x)
 ```
 
-The plots show that except for an intiail spike for the ACF, none of the values exceed the critical value. Additionally, increasing the differencing order to 2 increases the errors at various lags.
-```{r, echo = FALSE}
-x <- usnetelec
-par(mfrow = c(2,2))
-plot(x, main = 'x')
-transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
-qqnorm(transformed, main = "Transformed Data")
-qqline(transformed)
-acf(x)
-pacf(x)
-auto.arima(x)
-```
+The plots show that except for an intiail spike for the ACF, none of the values exceed the critical value. Additionally, increasing the differencing order to 2 increases the errors at various lags. The arima algorithm says a damped trend linear exponential model has the best fit. Lags at 1 and 12 were removed with differencing. 
+
 ### b
 ```{r}
 x <- usgdp
+
 par(mfrow = c(2,2))
 plot(x, main = 'x')
 transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
 qqnorm(transformed, main = "Transformed Data")
 qqline(transformed)
-acf(x)
-pacf(x)
+acf(transformed, main = "Box Cox Data")
+data.diff <- diff(transformed, 1)
+data.diff <- diff(transformed, 1)
+acf(data.diff, main = "Lag 1")
 auto.arima(x)
 ```
+
+The auto.arima() packages says the optimal idfferencing order is 2.
+
 ### c
 ```{r}
-?usgdp
-x <- usgdp
+?mcopper
+x <- mcopper
 par(mfrow = c(2,2))
 plot(x, main = 'x')
 transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
 qqnorm(transformed, main = "Transformed Data")
 qqline(transformed)
-acf(x)
-pacf(x)
-auto.arima(x)
+data.diff <- diff(transformed, 1)
+auto.arima(data.diff)
+acf(transformed)
+acf(data.diff)
 ```
+
+This model is optimized with first order differencing.
+
 ### d
 ```{r}
-?auto.arima()
+?enplanements
 x <- enplanements
 par(mfrow = c(2,2))
 plot(x, main = 'x')
@@ -95,13 +98,18 @@ transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
 
 qqnorm(transformed, main = "Transformed Data")
 qqline(transformed)
-acf(x)
-pacf(x)
-auto.arima(x)
+
+
+#data.diff <- diff(data.diff, 1)
+auto.arima(transformed)
+acf(transformed)
+acf(data.diff)
 ```
+This data benefits from first order differencing.
+
 ### e
 ```{r}
-??visitors
+?visitors
 x <-visitors
 par(mfrow = c(2,2))
 plot(x, main = 'x')
@@ -109,11 +117,15 @@ transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
 
 qqnorm(transformed, main = "Transformed Data")
 qqline(transformed)
-acf(x)
-pacf(x)
-auto.arima(x)
-```
+acf(transformed)
 
+auto.arima(transformed)
+
+data.diff <- diff(transformed, 1)
+
+acf(data.diff)
+```
+First order differencing greatly improves this model.
 ## Problem 8.5
 ```{r}
 curl::curl_download("https://otexts.com/fpp2/extrafiles/retail.xlsx", "retail.xlsx")
@@ -127,10 +139,15 @@ transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
 
 qqnorm(transformed, main = "Transformed Data")
 qqline(transformed)
-acf(x)
-pacf(x)
-auto.arima(x)
+acf(transformed)
+auto.arima(transformed)
+diff.data <- diff(transformed, 2)
+diff.data <- diff(transformed, 1)
+acf(diff.data)
+autoplot(diff.data)
 ```
+Differencing twice at 1 and 2 lag removed most of the lags spike and a Box Cox transformation normalizes the data.
+
 ## Problem 8.6
 ```{r}
 y <- ts(numeric(100))
@@ -142,13 +159,70 @@ for(i in 2:100)
 ### b
 ```{r}
 plot(y)
-```
-### c
-### d
-### e
-### f
-### g
 
+z <- ts(numeric(100))
+for(i in 2:100)
+  z[i] <- 0.9*z[i-1] + e[i]
+
+plot(z)
+
+```
+
+Increasing $\phi_1$ changes the pattern of the time series, rather than the scaling factor that $\epsilon$ contributes.
+### c
+```{r}
+
+z <- ts(numeric(100))
+for(i in 2:100)
+  z[i] <- mean(z[1:i]) + 0.6*e[i]
+
+plot(z)
+
+```
+
+### d
+```{r}
+
+z <- ts(numeric(100))
+for(i in 2:100)
+  z[i] <- mean(z[1:i]) + 0.9*e[i]
+
+plot(z)
+
+```
+It changes the scaling rather than the series.
+### e
+
+```{r}
+z1 <- ts(numeric(100))
+for(i in 2:100){
+  z1[i] <-  0.6*z1[i-1] + e[i]
+  z1[i] <- mean(z1[1:i]) + 0.6*e[i]
+}
+plot(z1)
+```
+
+### f
+```{r}
+z <- ts(numeric(100))
+for(i in 2:100){
+  z[i] <-  -.8*z[i-1] +  +.3*z[i-1] + e[i]
+ # z[i] <-  0.8*z[i-1] + e[i]
+}
+plot(z)
+```
+
+### g
+```{r}
+par(mfrow = c(2,2))
+plot(z1)
+plot(z)
+acf(z1)
+acf(z)
+
+plot(z,z1)
+```
+The second model appears to be slightly noisier.
 ## Problem 8.7
 
 ```{r}
@@ -158,6 +232,42 @@ transformed <- BoxCox(x, lambda = BoxCox.lambda(x))
 par(mfrow = c(1,2))
 qqnorm(x, main = "Data")
 qqline(x)
-qqnorm(transformed, main = "Transformed Data")
+qqnorm(transformed, main = "yndmanTransformed Data")
 qqline(transformed)
+acf(x)
+auto.arima(x)
+
+data.diff <- diff(transformed, 5)
+data.diff <- diff(transformed, 2)
+acf(data.diff)
+
 ```
+
+### a
+This data benefits most from 2nd order differencing and first order AR and MA models.
+
+### b
+
+The constant is close to the mean of the data. Because that number for us is small, it's unlikely that the model will be effected much with or without it.
+
+```{r}
+mean(data.diff)
+```
+### c
+
+$$
+(1-\phi_1)(1-B)^2y_t = c + (1+\theta_1 B)
+$$
+
+### d
+```{r}
+model <- auto.arima(transformed)
+plot(residuals(model))
+
+```
+The residuals seem sufficiently small.
+### e
+
+### f
+
+### g

@@ -4,7 +4,9 @@ author: "simplymathematics"
 date: "March 21, 2019"
 output: html_document
 ---
-
+```{r}
+library(fpp2)
+```
 # Hyndman Chapter 8
 ## Problem 8.1
 ### a
@@ -73,7 +75,7 @@ The auto.arima() packages says the optimal idfferencing order is 2.
 
 ### c
 ```{r}
-?mcopper
+
 x <- mcopper
 par(mfrow = c(2,2))
 plot(x, main = 'x')
@@ -90,7 +92,7 @@ This model is optimized with first order differencing.
 
 ### d
 ```{r}
-?enplanements
+
 x <- enplanements
 par(mfrow = c(2,2))
 plot(x, main = 'x')
@@ -109,7 +111,7 @@ This data benefits from first order differencing.
 
 ### e
 ```{r}
-?visitors
+
 x <-visitors
 par(mfrow = c(2,2))
 plot(x, main = 'x')
@@ -261,13 +263,30 @@ $$
 
 ### d
 ```{r}
-model <- auto.arima(transformed)
+model <- Arima(transformed, order = c(1,2,1))
 plot(residuals(model))
+model
 
 ```
 The residuals seem sufficiently small.
 ### e
+```{r}
+
+predictions <- predict(model, n.ahead = 3)
+predictions
+```
 
 ### f
 
+```{r}
+
+ts.plot(transformed, predictions$pred)
+```
 ### g
+Yes. My model was the same as the auto.arima model. T
+```{r}
+model.arima <- auto.arima(transformed)
+predictions <- predict(model.arima, n.ahead = 3)
+predictions
+ts.plot(transformed, predictions$pred)
+```

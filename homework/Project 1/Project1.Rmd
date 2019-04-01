@@ -1,40 +1,44 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: "Project 1"
 ---
 
 # Project 1
 
 ## Part A
 
-In part A, I want you to forecast how much cash is taken out of 4 different ATM machines for May 2010.  The data is given in a single file.  The variable ‘Cash’ is provided in hundreds of dollars, other than that it is straight forward.   I am being somewhat ambiguous on purpose to make this have a little more business feeling.  Explain and demonstrate your process, techniques used and not used, and your actual forecast.  I am giving you data via an excel file, please provide your written report on your findings, visuals, discussion and your R code via an RPubs link along with the actual.rmd file  Also please submit the forecast which you will put in an Excel readable file.
-
-
-```{r}
+First, I imported the data using Rstudio and the ```readxl``` package. There are 365 entries for each atm, so I assumed that each is an independent dataset for one of 4 atms starting on May 1st 2009. I have been tasked with forecasting the next 30 days. 
+```{r, echo = FALSE}
 library(forecast)
+#library(seasonal)
 atm.data <- readxl::read_xlsx("data/ATM624Data.xlsx")
-atm1 <- ts(subset(atm.data$Cash,subset = atm.data$ATM == 'ATM1'), frequency = 7)
-atm2 <- ts(subset(atm.data$Cash, subset = atm.data$ATM== 'ATM2'), frequency = 7)
-atm3 <- ts(subset(atm.data$Cash, subset = atm.data$ATM== 'ATM3'), frequency = 7)
-atm4 <- ts(subset(atm.data$Cash, subset = atm.data$ATM== 'ATM4'), frequency = 7)
-
-atms <- (atm1+ atm2+ atm4)
-autoplot(atms)
-
+atm1 <- ts(subset(atm.data$Cash, subset = atm.data$ATM == 'ATM1'), start = c(2009, 121), frequency = 365)
+atm2 <- ts(subset(atm.data$Cash, subset = atm.data$ATM== 'ATM2'), start = c(2009, 121), frequency = 365)
+atm3 <- ts(subset(atm.data$Cash, subset = atm.data$ATM== 'ATM3'), start = c(2009, 121), frequency = 365)
+atm4 <- ts(subset(atm.data$Cash, subset = atm.data$ATM== 'ATM4'), start = c(2009, 121), frequency = 365)
 ```
-Remove outlier
-```{r}
+A single data point from ATM4 was five times the value of any of the others. I assume this is a data entry error. To minimize forecasting error, I replaced this value with the mean of the ATM4 data. This makes the data for ATM4 look like the data for ATMs one and two.
+```{r, echo = FALSE}
 # Assumer outlier is wrong
-atm4[285] <- mean(atms)
-atms <- (atm1+ atm2+ atm3+ atm4)
-autoplot(atms)
+par(mfrow = c(1,2))
+plot(atm4, main = "With Outlier")
+atm4[285] <- mean(atm4)
+plot(atm4, main = "Without Outlier")
+par(mfrow = c(2,2))
+```
+Atm 3 was installed recently, so it has less data.
+```{r, echo = FALSE}
+par(mfrow = c(2,2))
+plot(atm1)
+plot(atm2)
+plot(atm3)
+plot(atm4)
+
 ```
 
-Impute missing data by averaging the data on either side.
+Due to what I assume is reporting errors, there are several missing data points. To fill in the gaps, I averaged the day before and after to fill any null space. This technique is known as linear interpolation and is widely accepted as a simple method for interpolation. This step is necessary because forecasting models to not work with null data points.
+```{r, echo = FALSE}
 
-```{r}
-
-#Imputation
+#Interpolation
 for (index in which(is.na(atm1)==TRUE)){
   atm1[index] = atm1[index+1]/2 + atm1[index-1]/2
 }
@@ -47,94 +51,169 @@ for (index in which(is.na(atm3)==TRUE)){
 for (index in which(is.na(atm4)==TRUE)){
   atm4[index] = atm4[index+1]/2 + atm4[index-1]/2
 }
-```
 
-# Check normality
-```{r}
-# Before
 par(mfrow = c(2,2))
-qqnorm(atm1)
-qqline(atm1)
-qqnorm(atm2)
-qqline(atm2)
-qqnorm(atm4)
-qqline(atm4)
 
+plot(atm1)
+plot(atm2)
+plot(atm3)
+plot(atm4)
 
-atm1 <- BoxCox(atm1, lambda = BoxCox.lambda(atm1))
-atm2 <- BoxCox(atm2, lambda= BoxCox.lambda(atm2))
-
-par(mfrow = c(1,2))
-qqnorm(atm1)
-qqline(atm1)
-qqnorm(atm2)
-qqline(atm2)
 
 ```
 
+The data appears to be noisy, with random variance. However, we have to check for autocorrelation, trends, and seasonality.
 ```{r}
 atms <- cbind(atm1, atm2, atm3, atm4)
 autoplot(atms)
 ```
 
+In order to perform a forecast on the data, it must be free of integer lags. The ACF plots below show the relationships between data points and the same data various times in the past (week-to-week or month-to-month, for example). These plots merely confirm the presence of lag rather than the size or length.
 ```{r}
+par(mfrow = c(2,2))
+acf(atm1, lag.max = 30)
+acf(atm2)
+acf(atm3)
+acf(atm4)
+```
+Luckily, we can use lag plots to see which lag is causing the issues. A plot that more strongly resembles a line corresponds to stronger lag at that number. As we can see across the datasets, lag 7 appears the strongest. Additionally, we can see a diminishing trend in each of the multiples of 7 (as we'd expect). Below are lags 1-30 for each of four atms.
+
+```{r, echo = FALSE}
+gglagplot(atm1, lags = 30)
+gglagplot(atm2, lags = 30)
+gglagplot(atm3, lags = 30)
+gglagplot(atm4, lags = 30)
+```
+
+We can use the R ```diff()``` command to remove the lag at 7 by passing the data and the number 7. 
+```{r, echo = FALSE}
+pre1 <- atm1
+pre2 <- atm2
+pre3 <- atm3
+pre4 <- atm4
+
+
+atm1 <- diff(atm1, 7)
+atm2 <- diff(atm2, 7)
+atm3 <- diff(atm3, 7)
+atm4 <- diff(atm4, 7)
+```
+This confirms the removal. However, we see a single lag spike at 1. We run the command again to remove the day-to-day correlation in the data.
+
+```{r, echo = FALSE}
+
+atm1 <- diff(atm1, 1)
+atm2 <- diff(atm2, 1)
+atm3 <- diff(atm3, 1)
+atm4 <- diff(atm4, 1)
+```
+
+The plots below confirm that we removed the integer lag spikes and that our data appears to be indistinguishable from whitenoise.
+
+```{r, echo = FALSE}
 par(mfrow = c(2,2))
 acf(atm1)
 acf(atm2)
 acf(atm3)
 acf(atm4)
 ```
-
-
+The simplest method is simple exponential smoothing. It is appropriate for forecasting data with no clear seasonal pattern or long-term trends. 
 
 ```{r}
-gglagplot(atms, lags = 30)
-gglagplot(atm1, lags = 30)
-gglagplot(atm2, lags = 30)
-gglagplot(atm3, lags = 30)
-gglagplot(atm4, lags = 30)
+
+ses1 <- ses(atm1)
+ses2 <- ses(atm2)
+ses3 <- ses(atm3)
+ses4 <- ses(atm4)
+
+par(mfrow = c(2,2))
+
+plot(ses1)
+plot(ses2)
+plot(ses3)
+plot(ses4)
 ```
-Simple Holt
+The Holt method is like the simple exponential smoothing method above, but includes a trend parameter. As you can see, each ATM is predicted to go up or down, depending on the preceding data.
 ```{r}
-fcast1 <- holt(atm1, h = 30)
-fcast2 <- holt(atm2, h = 30)
-fcast3 <- holt(atm3, h = 30)
-fcast4 <- holt(atm4, h = 30)
-autoplot(atm1) + 
-  autolayer(fcast1, series = "ATM 1 Projection", PI = FALSE)
- # autolayer(fcast2, series = "ATM 2 Projection", PI = FALSE) + 
-  #autolayer(fcast4, series = "ATM 4 Projection", PI = FALSE) 
+holt1 <- holt(pre1, h = 30)
+holt2 <- holt(pre2, h = 30)
+holt3 <- holt(pre3, h = 30)
+holt4 <- holt(pre4, h = 30)
+autoplot(pre1) + 
+  autolayer(holt1, series = "ATM 1 Projection", PI = FALSE)
+autoplot(pre2) + 
+  autolayer(holt2, series = "ATM 2 Projection", PI = FALSE)
+autoplot(pre3) +
+  autolayer(holt3, series = "ATM 3 Projection", PI = FALSE)
+autoplot(pre4) + 
+  autolayer(holt4, series = "ATM 4 Projection", PI = FALSE) 
 ```
-Holt- Winters
+Holt- Winters is inappropriate because we only have 1 year worth of data. Because of that is impossible to determine the seasonality factor needed for the Holt-Winters model. We will exclude this model from our considerations.
 
 ```{r}
-fc4 <- hw(atm4, damped=FALSE )
+#fc4 <- HoltWinters(atm4)
 
-fc3 <- hw(atm3, damped = FALSE)
+#fc3 <- hw(atm3, damped = FALSE)
 
-fc2 <- hw(atm2, damped=FALSE)
+#fc2 <- hw(atm2, damped=FALSE)
 
 
-fc1 <- hw(atm2, damped=FALSE)
+#fc1 <- hw(atm1, damped=FALSE)
 
-par(mfrow = c(3,1))
+#par(mfrow = c(3,1))
 
-autoplot(fc1)
-autoplot(fc2)
-autoplot(fc3)
-autoplot(fc4)
+#autoplot(fc1)
+#autoplot(fc2)
+#autoplot(fc3)
+#autoplot(fc4)
+#p1 <- predict(fc1, 30, prediction.interval=TRUE)
+#p2 <- predict(fc2, 30, prediction.interval=TRUE)
+#p3 <- predict(fc3, 30, prediction.interval=TRUE)
+#p4 <- predict(fc4, 30, prediction.interval=TRUE)
+#par(mfrow =c(2,2))
+
+#plot(p1)
+#plot(p2)
+#plot(p3)
+#plot(p4)
 ```
-```{r}
-p1 <- predict(fc1, 30, prediction.interval=TRUE)
-p2 <- predict(fc2, 30, prediction.interval=TRUE)
-p3 <- predict(fc3, 30, prediction.interval=TRUE)
-p4 <- predict(fc4, 30, prediction.interval=TRUE)
-par(mfrow =c(2,2))
+### Arima
 
-plot(p1)
-plot(p2)
-plot(p3)
-plot(p4)
+Finally, there is the arima model, which includes additive and multiplicative effects of data on itself. The ```auto.arima()``` function in R scans through several different models to find the one that minimizes the error between the fitted values and the observed ones.
+
+```{r}
+
+arima1 <- auto.arima(pre1, seasonal =  FALSE);
+pred1  <- predict(arima1, n.ahead = 30);
+arima2 <- auto.arima(pre2, seasonal = FALSE);
+pred2  <- predict(arima2, n.ahead = 30);
+arima3 <- auto.arima(pre3, seasonal = FALSE);
+pred3  <- predict(arima3, n.ahead = 30);
+arima4 <- auto.arima(pre4, seasonal = FALSE);
+pred4  <- predict(arima4, n.ahead = 30);
+
+
+
+par(mfrow = c(2,2))
+ts.plot(atm1, pred1$pred,  main = "atm1")
+ts.plot(atm2, pred2$pred, main = "atm2")
+ts.plot(atm3, pred3$pred, main = "atm3")
+ts.plot(atm4, pred4$pred, main = "atm4")
+
+```
+
+We can use the root mean square error to compare the results of our models. We square the residuals to amplify the effects of large errors and to remove any negative signs. Then we find the average and the square root to scale it. As we can see below, the arima model resulted in the smallest RMSE. The full-output of the model follows.
+
+```{r}
+mean(ses1$residuals**2)**.5
+mean(holt1$residuals**2)**.5
+mean(arima1$residuals**2)**.5
+summary(arima1)
+```
+Finally, we save the forecasts as
+
+```{r}
+
 ```
 
 ## Part B
@@ -157,9 +236,31 @@ for (index in which(is.na(ts)==TRUE)){
 
 ```{r}
 model1 <- hw(ts)
-predictions <- predict(model1, 12, prediction.interval=TRUE)
-plot(predictions)
+predictions1 <- predict(model1, 12, prediction.interval=TRUE)
+plot(model1)
+
+
+model2 <- ses(ts)
+predictions2 <- predict(model2, 12, prediction.interval = TRUE)
+plot(model2)
+
+model3 <- holt(ts)
+predictions3 <- predict(model3, 12, prediction.interval = TRUE)
+plot(model3)
+
 ```
+
+Evaluation
+```{r}
+print(sum(model1$residuals**2)**.5)
+print(sum(model2$residuals**2)**.5)
+print(sum(model3$residuals**2)**.5)
+
+Box.test(model1$residuals, lag = 10)
+```
+
+
+Formatting ts for excel.
 ```{r}
 foo <- as.data.frame(ts)
 bar <- as.data.frame(predictions)
@@ -183,7 +284,7 @@ for(index in 1:length(bar)){
   foo[index + i] <- bar[index]
 }
 
-
+plot(foo)
 ```
 
 
@@ -192,7 +293,7 @@ ts.new <- ts(foo, start = c(1998,1), frequency = 12)
 partB <- ts.new
 
 ts2csv <- function(x) {
-  fname <- paste0("predictions/",deparse(substitute(x)), ".csv")h
+  fname <- paste0("predictions/",deparse(substitute(x)), ".csv")
   readr::write_csv(tsibble::as_tsibble(x, gather = FALSE), fname)
 }
 
@@ -204,4 +305,37 @@ ts2csv(partB)
 
 ## Part C
 
-Part C consists of two data sets.  These are simple 2 columns sets, however they have different time stamps.  Your optional assignment is to time-base sequence the data and aggregate based on hour (example of what this looks like, follows).  Note for multiple recordings within an hour, take the mean.  Then to determine if the data is stationary and can it be forecast.  If so, provide a week forward forecast and present results via Rpubs and .rmd and the forecast in an Excel readable file.   
+Part C consists of two data sets.  These are simple 2 columns sets, however they have different time stamps.  Your optional assignment is to time-base sequence the data and aggregate based on hour (example of what this looks like, follows).  Note for multiple recordings within an hour, take the mean.  Then to determine if the data is stationary and can it be forecast.  If so, provide a week forward forecast and present results via Rpubs and .rmd and the forecast in an Excel readable file. 
+
+
+```{r}
+df1 <- (readxl::read_xlsx("data/Waterflow_Pipe1.xlsx"))
+df2 <- (readxl::read_xlsx("data/Waterflow_Pipe2.xlsx"))
+
+df1
+df <- merge(df1, df2, by = "Date Time", all=TRUE)
+df
+```
+
+```{r}
+times <- unique(df1$`Date Time`)
+
+new.df1 <- data.frame(times)
+i = 0
+new.list <- c()
+
+for(time in times){
+  new.df1$times[i] =  mean(df1$WaterFlow[which(new.df1$times==time)])
+}
+
+
+
+
+
+mean(df1$WaterFlow[which(new.df1$times==time)])
+```
+
+```{r}
+library(xts)
+xts1 <- xts(df1)
+```

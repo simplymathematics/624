@@ -5,8 +5,6 @@ output:
     df_print: paged
 ---
 
-# Project 1
-
 ## Part A
 
 ### Reading Data
@@ -45,7 +43,7 @@ plot(atm4)
 
 ```
 
-Due to what I assume is reporting errors, there are several missing data points. To fill in the gaps, I averaged the day before and after to fill any null space. This technique is known as linear interpolation and is widely accepted as a simple method for interpolation. This step is necessary because forecasting models to not work with null data points.
+Due to what I assume is reporting errors, there are several missing data points. To fill in the gaps, I used the STL interpolation function in the ```forecast``` package.
 ```{r, echo = FALSE}
 atm1 <- na.interp(atm1)
 atm2 <- na.interp(atm2)

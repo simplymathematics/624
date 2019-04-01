@@ -132,7 +132,7 @@ holt3 <- holt(atm3, h = 30)
 holt4 <- holt(atm4, h = 30)
 autoplot(atm1) + 
   autolayer(holt1, series = "ATM 1 Projection", PI = FALSE)
-autoplot(atm2) + 
+autoplot(atm2.diff) + 
   autolayer(holt2, series = "ATM 2 Projection", PI = FALSE)
 autoplot(atm3) +
   autolayer(holt3, series = "ATM 3 Projection", PI = FALSE)
@@ -169,8 +169,8 @@ Finally, there is the arima model, which includes additive and multiplicative ef
 
 arima1 <- auto.arima(atm1);
 pred1  <- forecast(atm1, model = arima1, h =31 );
-arima2 <- auto.arima(atm2);
-pred2  <- forecast(atm2, model = arima2, h =31 );
+arima2 <- auto.arima(atm2.diff);
+pred2  <- forecast(atm2.diff, model = arima2, h =31 );
 arima3 <- auto.arima(atm3);
 pred3  <- forecast(atm3, model = arima3, h =31 );
 arima4 <- auto.arima(atm4);
@@ -178,7 +178,7 @@ pred4  <- forecast(atm4, model = arima4, h =31 );
 
 autoplot(atm1) + 
   autolayer(pred1, series = "ATM 1 Projection", PI = FALSE)
-autoplot(atm2) + 
+autoplot(atm2.diff) + 
   autolayer(pred2, series = "ATM 2 Projection", PI = FALSE)
 autoplot(atm3) +
   autolayer(pred3, series = "ATM 3 Projection", PI = FALSE)
@@ -330,7 +330,7 @@ checkresiduals(model3)
 checkresiduals(model4)
 ```
 
-The ARIMA is clearly not a good fit for the data. So, of the remaining models, I suggest the ses because it has the smallest RMSE. 
+The arima model is the best fit for the data. It has the smallest RMSE and its residuals are closest to white noise. 
 ```{r, echo = FALSE}
 accuracy(model1)
 accuracy(model2)

@@ -101,7 +101,7 @@ After a single differencing, we see that atm2 passes the KPSS test.
 
 ```{r, echo = FALSE}
 atm2.diff <- diff(atm2, 7)
-ndiffs(atm2, alpha=.05, test = 'kpss')
+ndiffs(atm2.diff, alpha=.05, test = 'kpss')
 ```
 
 ### Modelling
@@ -143,31 +143,24 @@ autoplot(atm4) +
 The Holt-Winters model uses differencing, trends, and seasonality to build a model. It chooses these parameters so as to minimize error.
 
 ```{r, echo = FALSE}
-hw4 <- hw(atm4)
+hw1 <- hw(atm1);
+pred1  <- predict(hw1);
+hw2 <- hw(atm2, damped = TRUE, d=1);
+pred2  <- predict(hw2);
+hw3 <- hw(atm3);
+pred3  <- predict(hw3);
+hw4 <- hw(atm4);
+pred4  <- predict(hw4);
 
-hw3 <- hw(atm3, damped = FALSE)
+autoplot(atm1) + 
+  autolayer(hw1, series = "ATM 1 Projection", PI = FALSE)
+autoplot(atm2) + 
+  autolayer(hw2, series = "ATM 2 Projection", PI = FALSE)
+autoplot(atm3) +
+  autolayer(hw3, series = "ATM 3 Projection", PI = FALSE)
+autoplot(atm4) + 
+  autolayer(hw4, series = "ATM 4 Projection", PI = FALSE) 
 
-hw2 <- hw(atm2.diff, damped=FALSE)
-
-
-hw1 <- hw(atm1, damped=FALSE)
-
-par(mfrow = c(3,1))
-
-autoplot(hw1)
-autoplot(hw2)
-autoplot(hw3)
-autoplot(hw4)
-p1 <- predict(hw1, 30, prediction.interval=TRUE)
-p2 <- predict(hw2, 30, prediction.interval=TRUE)
-p3 <- predict(hw3, 30, prediction.interval=TRUE)
-p4 <- predict(hw4, 30, prediction.interval=TRUE)
-par(mfrow =c(2,2))
-
-plot(p1)
-plot(p2)
-plot(p3)
-plot(p4)
 ```
 
 Finally, there is the arima model, which includes additive and multiplicative effects of data on itself. The ```auto.arima()``` function in R scans through several different models to find the one that minimizes the error between the fitted values and the observed ones.
@@ -175,24 +168,26 @@ Finally, there is the arima model, which includes additive and multiplicative ef
 ```{r, echo = FALSE}
 
 arima1 <- auto.arima(atm1);
-pred1  <- predict(arima1);
-arima2 <- auto.arima(atm2, d=1);
-pred2  <- predict(arima2);
+pred1  <- forecast(atm1, model = arima1, h =31 );
+arima2 <- auto.arima(atm2);
+pred2  <- forecast(atm2, model = arima2, h =31 );
 arima3 <- auto.arima(atm3);
-pred3  <- predict(arima3);
+pred3  <- forecast(atm3, model = arima3, h =31 );
 arima4 <- auto.arima(atm4);
-pred4  <- predict(arima4);
+pred4  <- forecast(atm4, model = arima4, h =31 );
 
-
-par(mfrow = c(2,2))
-ts.plot(atm1, pred1$pred,  main = "atm1")
-ts.plot(atm2, pred2$pred, main = "atm2")
-ts.plot(atm3, pred3$pred, main = "atm3")
-ts.plot(atm4, pred4$pred, main = "atm4")
+autoplot(atm1) + 
+  autolayer(pred1, series = "ATM 1 Projection", PI = FALSE)
+autoplot(atm2) + 
+  autolayer(pred2, series = "ATM 2 Projection", PI = FALSE)
+autoplot(atm3) +
+  autolayer(pred3, series = "ATM 3 Projection", PI = FALSE)
+autoplot(atm4) + 
+  autolayer(pred4, series = "ATM 4 Projection", PI = FALSE) 
 
 ```
 
-We can use the root mean square error to compare the results of our models. We square the residuals to amplify the effects of large errors and to remove any negative signs. Then we find the average and the square root to scale it. As we can see below, the Arima model resulted in the smallest RMSE for ATM 1 and a negligible increase for the other atms. However, the Holt-Winters model performed the best consistently.
+We can use the root mean square error to compare the results of our models. We square the residuals to amplify the effects of large errors and to remove any negative signs. Then we find the average and the square root to scale it. As we can see below, the Arima model resulted in the smallest RMSE for ATM 1 and a negligible increase for the other atms relative to the other models. However, the Holt-Winters model performed the best consistently.
 
 ```{r, echo = FALSE}
 first <- c(
@@ -247,35 +242,31 @@ checkresiduals(hw4)
 Even though our data passed the KPSS test, it is still not white noise. This is either due to the STL model not being the best fit, or the way in which I constructed the initial time series and windowed by week rather than month or quarter. This final model produces residuals with means near 0 and a forecasted variance that corresponds to the observed variance. This upper bounds of this model should give us a great idea of how much cash to have on hand in each atm. The forecasted values are saved in the ```/predictions``` folder. While I included atm3 for the sake of completion, please note that with such a small amount of data, the forecasts are fairly useless.
 
 ```{r, echo = FALSE}
-library(xlsx)
-final1 <- hw1
-final2 <- hw2
-final3 <- hw3
-final4 <- hw4
-
-
-
-atm1 <- as.data.frame(forecast(final1, 31))
-atm2 <- as.data.frame(forecast(final2, 31))
-atm3 <- as.data.frame(forecast(final3, 31))
-atm4 <- as.data.frame(forecast(final4, 31))
-
+rows <- seq(1,31)
+rows
+final1 <- round(as.data.frame(forecast(atm1, model = hw1, h =31 )),2)
+rownames(final1) <- rows
+final2 <- round(as.data.frame(forecast(atm2, model = hw2, 31)), 2)
+rownames(final2) <- rows
+final3 <-round(as.data.frame(forecast(atm3, model = hw3, 31)), 2)
+rownames(final3) <- rows
+final4 <- round(as.data.frame(forecast(atm4, model = hw4, 31)), 2)
+rownames(final4) <- rows
 
 writeMultipleData <- function (file, ...){
     require(xlsx, quietly = TRUE)
     objects <- list(...)
     fargs <- as.list(match.call(expand.dots = TRUE))
     objnames <- c("ATM 1", "ATM 2", "ATM 3", "ATM 4")
-    nobjects <- length(objects)
-    for (i in 1:nobjects) {
+    len <- length(objects)
+    for (i in 1:len) {
         if (i == 1)
-            write.xlsx(objects[[i]], file, sheetName = objnames[i], col.names = FALSE)
-        else write.xlsx(objects[[i]], file, sheetName = objnames[i],
-            append = TRUE, col.names = FALSE)
+            write.xlsx(objects[[i]], file, sheetName = objnames[i], col.names = TRUE)
+        else write.xlsx(objects[[i]], file, sheetName = objnames[i], col.names = TRUE, append = TRUE)
     }
   }
 
-writeMultipleData("predictions/ATMs.xlsx", atm1, atm2, atm3, atm4)
+writeMultipleData("predictions/ATMs.xlsx", final1, final2, final3, final4)
 ```
 
 
@@ -290,7 +281,7 @@ ts <- ts(df$KWH, start = c(1998,1), end = c(2013,12), frequency = 12)
 autoplot(ts)
 ```
 
-Then, we use STL interpolation to find the missing data. 
+Then, I usec STL interpolation to find the missing data. 
 
 ```{r, echo = FALSE}
 
@@ -339,7 +330,7 @@ checkresiduals(model3)
 checkresiduals(model4)
 ```
 
-It is clearly not a good fit for the data. So, of the remaining models, I suggest the ses because it has the smallest RMSE. 
+The ARIMA is clearly not a good fit for the data. So, of the remaining models, I suggest the ses because it has the smallest RMSE. 
 ```{r, echo = FALSE}
 accuracy(model1)
 accuracy(model2)
@@ -357,7 +348,6 @@ bar$`Hi 80` <- NULL
 bar$`Lo 95` <- NULL
 bar$`Hi 95` <- NULL
 
-length1 = dim(foo)
 tmp <- length(foo)
 row.names(bar) = NULL
 colnames(bar) = 'x'

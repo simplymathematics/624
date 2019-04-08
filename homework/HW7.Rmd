@@ -109,6 +109,6 @@ rmse4
 ```
 Below we can compare the results of 3 of the models.
 ```{r}
-barplot(c(rmse1, rmse3, rmse4), names.arg = c('NN', 'KNN', 'SVM'))
+barplot(c(rmse1, rmse3, rmse4), names.arg = c('NN', 'KNN', 'SVM'), main = "RMSE for Various Models")
 ```
 Since the KNN is a classifier rather than a regressor, it is inappropriate for this data and the RMSE comparator. Both the KNN and NN perform well with the data, but the NN wins slightly.

@@ -5,6 +5,8 @@ date: "April 7, 2019"
 output: html_document
 ---
 
+
+## 7.3
 ```{r}
 library(mlbench)
 library(caret)
@@ -33,7 +35,79 @@ plot(knnModel$results$RMSE)
 The minimized RMSE appears to happen around 6 cluster, although 5 and 7 give similar results.
 
 ```{r}
-library(earth)
 mars <- earth(trainingData$x, trainingData$y)
+mars
+```
+Mars selects x1-x6.
+
+## 7.5
+```{r}
+library(AppliedPredictiveModeling)
+library(doParallel)
+library(doParallel) 
+rCluster <- makePSOCKcluster(6)
+registerDoParallel(rCluster)
+data(ChemicalManufacturingProcess)
+df <- as.data.frame(ChemicalManufacturingProcess)
+df
 ```
 
+```{r}
+na_to_mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
+df <- replace(df, TRUE, lapply(df, na_to_mean))
+
+pre <- preProcess(df, method = c("center", "scale"))
+data <- predict(pre, df)
+data
+```
+```{r}
+all_indexes = 1:176
+training_index = sample(1:176, size = 140)
+test_index = setdiff(all_indexes, training_index)
+training = data[training_index,]
+testing = data[test_index,]
+test_labels <- testing['Yield'] 
+train_labels <- training['Yield']
+features <- training
+features['Yield'] <- NULL
+```
+
+Below we build a neural net.
+```{r}
+library(neuralnet)
+model1 <- neuralnet(Yield~. , data = training, hidden = c(5,3))
+#plot(model1)
+tmp <- compute(model1, testing)
+pred1 <- tmp$net.result
+rmse1 <- sum(((pred1 - test_labels)^2)^.5)
+```
+The
+
+```{r}
+model2 <- train(x  = features , 
+                  y = train_labels$Yield, 
+                  method = "knn", preProc =                             c("center", "scale"), 
+                  tuneLength = 10)
+plot(model2$results$RMSE)
+
+```
+```{r}
+model3 <- earth(x  = features , y = train_labels$Yield)
+pred3 <- predict(model3, testing)
+rmse3 <- sum(((pred3 - test_labels)^2)^.5)
+rmse3
+```
+
+```{r}
+library(e1071)
+labels = list(train_labels)
+model4 <- svm(Yield ~ ., data = training, kernel = "polynomial")
+pred4 <- predict(model4, testing)
+rmse4 <- sum(((pred4 - test_labels)^2)^.5)
+rmse4
+```
+
+```{r}
+barplot(c(rmse1, rmse3, rmse4), names.arg = c('NN', 'KNN', 'SVM'))
+```
+Since the KNN is a classifier rather than a regressor, it is inappropriate for this data and the RMSE comparator. Both the KNN and NN perform well with the data, but the NN wins slightly.

@@ -7,7 +7,8 @@ output: html_document
 
 
 ## 7.3
-```{r}
+Here we split the data.
+```{r, echo = FALSE}
 library(mlbench)
 library(caret)
 library(earth)
@@ -18,13 +19,12 @@ head(df)
 trainingData$x <- data.frame(trainingData$x)
 featurePlot(trainingData$x, trainingData$y)
 ```
-
+Here I generate the test data.
 ```{r}
 testData <- mlbench.friedman1(5000, sd = 1)
 testData$x <- data.frame(testData$x)
-
 ```
-
+Here I build a KNN classifier.
 ```{r}
 knnModel <- train(x = trainingData$x, 
                   y = trainingData$y, 
@@ -41,25 +41,25 @@ mars
 Mars selects x1-x6.
 
 ## 7.5
-```{r}
+Below is the data presented for modelling.
+```{r, echo = FALSE}
 library(AppliedPredictiveModeling)
 library(doParallel)
-library(doParallel) 
 rCluster <- makePSOCKcluster(6)
 registerDoParallel(rCluster)
 data(ChemicalManufacturingProcess)
 df <- as.data.frame(ChemicalManufacturingProcess)
 df
 ```
-
+Here, I replaced NAs with the mean of the column they are in and center and scaled all the data.
 ```{r}
 na_to_mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
 df <- replace(df, TRUE, lapply(df, na_to_mean))
-
 pre <- preProcess(df, method = c("center", "scale"))
 data <- predict(pre, df)
 data
 ```
+Here, I create my training and test sets as well as label sets.
 ```{r}
 all_indexes = 1:176
 training_index = sample(1:176, size = 140)
@@ -81,7 +81,7 @@ tmp <- compute(model1, testing)
 pred1 <- tmp$net.result
 rmse1 <- sum(((pred1 - test_labels)^2)^.5)
 ```
-The
+Then, we build a knn. Here we find that the optimal cluster size is 3 or 5
 
 ```{r}
 model2 <- train(x  = features , 
@@ -89,15 +89,16 @@ model2 <- train(x  = features ,
                   method = "knn", preProc =                             c("center", "scale"), 
                   tuneLength = 10)
 plot(model2$results$RMSE)
-
 ```
+
+Model 3 was a MARS model.
 ```{r}
 model3 <- earth(x  = features , y = train_labels$Yield)
 pred3 <- predict(model3, testing)
 rmse3 <- sum(((pred3 - test_labels)^2)^.5)
 rmse3
 ```
-
+Below is an SVM, using the polynomial kernel.
 ```{r}
 library(e1071)
 labels = list(train_labels)
@@ -106,7 +107,7 @@ pred4 <- predict(model4, testing)
 rmse4 <- sum(((pred4 - test_labels)^2)^.5)
 rmse4
 ```
-
+Below we can compare the results of 3 of the models.
 ```{r}
 barplot(c(rmse1, rmse3, rmse4), names.arg = c('NN', 'KNN', 'SVM'))
 ```

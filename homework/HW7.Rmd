@@ -9,9 +9,9 @@ output: html_document
 ## 7.3
 Here we split the data.
 ```{r, echo = FALSE}
-library(mlbench)
-library(caret)
-library(earth)
+library(mlbench, quietly = TRUE)
+library(caret, quietly = TRUE)
+library(earth, quietly = TRUE)
 set.seed(200)
 trainingData <- mlbench.friedman1(200, sd = 1)
 df = as.data.frame(trainingData)
@@ -43,8 +43,8 @@ Mars selects x1-x6.
 ## 7.5
 Below is the data presented for modelling.
 ```{r, echo = FALSE}
-library(AppliedPredictiveModeling)
-library(doParallel)
+library(AppliedPredictiveModeling, quietly = TRUE)
+library(doParallel, quietly = TRUE)
 rCluster <- makePSOCKcluster(6)
 registerDoParallel(rCluster)
 data(ChemicalManufacturingProcess)
@@ -74,7 +74,7 @@ features['Yield'] <- NULL
 
 Below we build a neural net.
 ```{r}
-library(neuralnet)
+library(neuralnet, quietly = TRUE)
 model1 <- neuralnet(Yield~. , data = training, hidden = c(5,3))
 #plot(model1)
 tmp <- compute(model1, testing)
@@ -100,7 +100,7 @@ rmse3
 ```
 Below is an SVM, using the polynomial kernel.
 ```{r}
-library(e1071)
+library(e1071, quietly = TRUE)
 labels = list(train_labels)
 model4 <- svm(Yield ~ ., data = training, kernel = "polynomial")
 pred4 <- predict(model4, testing)

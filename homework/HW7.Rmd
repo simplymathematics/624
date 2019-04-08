@@ -49,7 +49,7 @@ rCluster <- makePSOCKcluster(6)
 registerDoParallel(rCluster)
 data(ChemicalManufacturingProcess)
 df <- as.data.frame(ChemicalManufacturingProcess)
-df
+head(df)
 ```
 Here, I replaced NAs with the mean of the column they are in and center and scaled all the data.
 ```{r}
@@ -57,7 +57,7 @@ na_to_mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
 df <- replace(df, TRUE, lapply(df, na_to_mean))
 pre <- preProcess(df, method = c("center", "scale"))
 data <- predict(pre, df)
-data
+head(data)
 ```
 Here, I create my training and test sets as well as label sets.
 ```{r}

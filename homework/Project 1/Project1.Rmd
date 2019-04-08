@@ -9,7 +9,7 @@ output:
 
 ### Reading Data
 
-First, I imported the data using Rstudio and the ```readxl``` package. There are 365 entries for each atm, so I assumed that each is an independent dataset for one of 4 atms starting on May 1st 2009. I have been tasked with forecasting the next 30 days. 
+First, I imported the data using Rstudio and the ```readxl``` package. There are 365 entries for each atm, so I assumed that each is an independent dataset for one of 4 atms starting on May 1st 2009. I have been tasked with forecasting the next 30 days. Please note that unless otherwise noted, the x-axis times are in weeks.
 ```{r, echo = FALSE}
 library(forecast)
 library(xlsx)

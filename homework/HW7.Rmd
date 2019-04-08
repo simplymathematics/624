@@ -1,0 +1,39 @@
+---
+title: "Kuhn and Johnson Chapter 7"
+author: "simplymathematics"
+date: "April 7, 2019"
+output: html_document
+---
+
+```{r}
+library(mlbench)
+library(caret)
+library(earth)
+set.seed(200)
+trainingData <- mlbench.friedman1(200, sd = 1)
+df = as.data.frame(trainingData)
+head(df)
+trainingData$x <- data.frame(trainingData$x)
+featurePlot(trainingData$x, trainingData$y)
+```
+
+```{r}
+testData <- mlbench.friedman1(5000, sd = 1)
+testData$x <- data.frame(testData$x)
+
+```
+
+```{r}
+knnModel <- train(x = trainingData$x, 
+                  y = trainingData$y, 
+                  method = "knn", preProc =                             c("center", "scale"), 
+                  tuneLength = 10)
+plot(knnModel$results$RMSE)
+```
+The minimized RMSE appears to happen around 6 cluster, although 5 and 7 give similar results.
+
+```{r}
+library(earth)
+mars <- earth(trainingData$x, trainingData$y)
+```
+

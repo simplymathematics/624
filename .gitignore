@@ -37,3 +37,6 @@ rsconnect/
 
 # htmls pages
 *.html
+
+# Final project is exclude (separate repository)
+forecasting-project/

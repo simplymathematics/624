@@ -1,15 +1,33 @@
 ---
 title: "HW 10"
-author: "simplymathematics"
-date: "May 5, 2019"
 output: html_document
 ---
 
-```{r}
-#install.packages(c("arules", "arulesViz","tidyverse", "lubridate", "plyr", "knitr"), Ncpus = 6, dependencies = TRUE)
+# Dependencies
 
+```{r}
 library(arules)
-library(arulesViz)
+library(tidyverse)
+library(lubridate)
+library(plyr)
+library(knitr)
+```
+
+```{r, echo = FALSE}
+url <- "https://raw.githubusercontent.com/simplymathematics/624/master/homework/HW10/GroceryDataSet.csv"
+
+#install.packages(c("arules", "arulesViz","tidyverse", "lubridate", "plyr", "knitr"), dependencies = TRUE)
+
+transactions <- read.transactions(url)
+rules <- apriori(transactions, parameter = list(supp=0.001, conf=0.8))
+rules <- sort(rules, by='confidence', decreasing = TRUE)
+summary(rules)
+```
+
+```{r}
+top10 <- inspect(rules[1:10])
+top10
+```
 library(tidyverse)
 library(lubridate)
 library(dplyr)

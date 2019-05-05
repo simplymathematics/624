@@ -28,17 +28,3 @@ summary(rules)
 top10 <- inspect(rules[1:10])
 top10
 ```
-library(tidyverse)
-library(lubridate)
-library(dplyr)
-```
-
-
-```{r}
-training <- read.csv("GroceryDataSet.csv", header = FALSE)
-training
-
-retail <- training
-
-retail %>% mutate(Description = as.factor(Description))
-```

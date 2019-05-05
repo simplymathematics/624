@@ -1,0 +1,26 @@
+---
+title: "HW 10"
+author: "simplymathematics"
+date: "May 5, 2019"
+output: html_document
+---
+
+```{r}
+#install.packages(c("arules", "arulesViz","tidyverse", "lubridate", "plyr", "knitr"), Ncpus = 6, dependencies = TRUE)
+
+library(arules)
+library(arulesViz)
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+```
+
+
+```{r}
+training <- read.csv("GroceryDataSet.csv", header = FALSE)
+training
+
+retail <- training
+
+retail %>% mutate(Description = as.factor(Description))
+```
